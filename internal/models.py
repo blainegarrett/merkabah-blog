@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import logging
 
 from google.appengine.ext import ndb
+from django.core import urlresolvers
 
 
 class Page(ndb.Model):
@@ -25,13 +26,10 @@ class BlogMedia(ndb.Model):
     content_type = ndb.StringProperty()
     gcs_filename = ndb.StringProperty()
     size = ndb.IntegerProperty()
-    
-    
+
     @property
     def size_in_kb(self):
         return self.size * 1000
-    
-    
 
 
 class BlogCategory(ndb.Model):
@@ -67,13 +65,14 @@ class BlogPost(ndb.Model):
         return BlogMedia.get(self.primary_media_image).filename
 
     def get_permalink(self):
+        """
+        """
         dt = self.published_date
         if dt:
-            return '/%02d/%02d/%02d/%s' % (dt.year, dt.month, dt.day, self.slug)
+            pub_slug = '%02d/%02d/%02d/%s/' % (dt.year, dt.month, dt.day, self.slug)
+            return urlresolvers.reverse('blog_view', kwargs={'permalink': pub_slug})
         else:
             return '#'
-
-#kind_name_map = { 'post' : BlogPost, 'category' : BlogCategory }
 
 
 def make_dummy_data(total):
@@ -88,8 +87,8 @@ def make_dummy_data(total):
     while i < total:
 
         b = BlogPost()
-        b.title='Super Cool %s' % i
-        b.slug='super-cool-%s' % i
+        b.title = 'Super Cool %s' % i
+        b.slug = 'super-cool-%s' % i
         b.content = 'This <b>Thing that happened to me</b>'
         b.published_date = datetime.now()
         b.is_published = True

@@ -10,7 +10,7 @@ class BlogBaseCtrl(BaseCtrlClass):
     """
     Base Controller for all Public Blog Controllers
     """
-    chrome_template = 'v2/base.html'
+
     active_menu_tab = 'blog'
 
     def process_request(self, request, context, *args, **kwargs):
