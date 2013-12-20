@@ -29,8 +29,8 @@ class BlogCategoryActionColumn(merkabah_datatable.DatatableColumn):
     """
 
     def render_content(self, obj):
-        link = '#'
-        return '<a href="%s" class="button">Edit</a>' % link
+        link = '/madmin/plugin/blog/delete_category/?category_key=%s' % obj.key.urlsafe()
+        return '<a href="%s" class="button">Delete</a>' % link
 
 
 class BlogGroupActions(object):
@@ -39,10 +39,21 @@ class BlogGroupActions(object):
 
     def render_content(self):
         link = '/madmin/plugin/blog/create/'
-        output = '<a href="%s" class="action btn-primary btn">Create</a>' % link
+        output = '<a href="%s" class="action btn-primary btn">Create</a>&nbsp;&nbsp;&nbsp;' % link
 
         link = '/madmin/plugin/blog/images/'
-        output += '<a href="%s" class="btn-primary btn">Images</a>' % link
+        output += '<a href="%s" class="btn">Images</a>' % link
+
+        link = '/madmin/plugin/blog/categories/'
+        output += '<a href="%s" class="btn">Categories</a>' % link
+        return output
+
+class BlogCategoryGroupActions(object):
+    """
+    """
+    def render_content(self):
+        link = '/madmin/plugin/blog/create_category/'
+        output = '<a href="%s" class="action btn-primary btn">Create</a>&nbsp;&nbsp;&nbsp;' % link
         return output
 
 
@@ -78,6 +89,11 @@ class BlogCategoryGrid(merkabah_datatable.Datatable):
     actions = BlogCategoryActionColumn()
 
     column_order = ['name', 'slug', 'actions']
+
+    group_actions = BlogCategoryGroupActions()
+    
+    def get_row_identifier(self, obj):
+        return obj.key.urlsafe()
 
 
 class BlogMediaThumbnailColumn(merkabah_datatable.DatatableColumn):

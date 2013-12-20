@@ -2,15 +2,15 @@
 Merkabah Blog Plugin
 """
 
-from plugins.blog.forms import BlogPostForm, ImageUploadForm
-from plugins.blog.internal.api import get_posts
-from plugins.blog.internal.api import get_images
+from plugins.blog.forms import BlogPostForm, ImageUploadForm, BlogCategoryForm
+from plugins.blog.internal.api import get_posts, get_images, get_categories
+
 from plugins.blog.internal.api import create_post, edit_post
-from plugins.blog.internal.models import BlogMedia
+from plugins.blog.internal.models import BlogMedia, BlogCategory
 
 from google.appengine.ext import ndb
 
-from plugins.blog.datatables import BlogPostGrid, BlogMediaGrid
+from plugins.blog.datatables import BlogPostGrid, BlogMediaGrid, BlogCategoryGrid
 import logging
 from merkabah.core.controllers import TemplateResponse, FormDialogResponse, AlertResponse
 from merkabah.core.controllers import FormResponse, FormErrorResponse, CloseFormResponse, GridRowResponse
@@ -70,7 +70,9 @@ class BlogPlugin(object):
             'slug': post.slug,
             'title': post.title,
             'content': post.content,
-            'publish': post.is_published,
+            'publish': bool(post.published_date),
+            'categories': [c_key.urlsafe() for c_key in post.categories],
+            'primary_media_image' : post.primary_media_image.urlsafe() if post.primary_media_image else ''
         }
 
         form = BlogPostForm(initial=initial_data)
@@ -157,6 +159,55 @@ class BlogPlugin(object):
         if request.is_ajax():
             return FormResponse(form, id='images_create_form', title="Upload a file", target_url=upload_url, target_action='images_create', is_upload=True)
         return TemplateResponse('admin/plugin/inline_form_wrapper.html', context)
+
+    def process_categories(self, request, context, *args, **kwargs):
+
+        entities = get_categories()
+        context['grid'] = BlogCategoryGrid(entities, request, context)
+
+        return TemplateResponse('plugins/blog/categories.html', context)
+
+
+    def process_create_category(self, request, context, *args, **kwargs):
+        form = BlogCategoryForm()
+        
+        context['form'] = form
+
+        if request.POST:
+            context['form'] = BlogCategoryForm(request.POST)
+            if context['form'].is_valid():
+                category_key = ndb.Key('BlogCategory', context['form'].cleaned_data['slug'])
+                cat = BlogCategory(key=category_key,
+                    slug=context['form'].cleaned_data['slug'],
+                    name=context['form'].cleaned_data['name'])
+                cat.put()
+                return AlertResponse('Category Created. Please Reload.')
+
+        if request.is_ajax():
+            return FormResponse(form, id='categories_create_form', title="Create", target_url='/madmin/plugin/blog/create_category/', target_action='create_category')
+        return TemplateResponse('admin/plugin/inline_form_wrapper.html', context)
+
+
+    def process_delete_category(self, request, context, *args, **kwargs):
+        """
+        """
+
+        category_keystr = request.REQUEST['category_key']
+
+        if not category_keystr:
+            raise RuntimeError('No argument category_key provided.')
+
+        category_key = ndb.Key(urlsafe=category_keystr)
+
+        # Prep the file on cloud storage to be deleted
+        category = category_key.get()
+
+        if not (category):
+            logging.debug('BlogCategory with key %s does not exist?' % category_key)
+        else:
+            # Delete the entity that refers to the gcs file
+            category_key.delete()
+        return AlertResponse('Deleted...')
 
     def process_images(self, request, context, *args, **kwargs):
         

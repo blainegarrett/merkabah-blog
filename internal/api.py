@@ -6,8 +6,7 @@ from google.appengine.api import memcache
 
 from google.appengine.ext import ndb
 
-from plugins.blog.internal.models import BlogPost
-from plugins.blog.internal.models import BlogMedia
+from plugins.blog.internal.models import BlogPost, BlogMedia, BlogCategory
 from plugins.blog.constants import POSTS_PER_PAGE
 from plugins.blog.constants import PUBLISHED_DATE_MIN
 
@@ -29,7 +28,7 @@ def get_posts(cursor=None, limit=POSTS_PER_PAGE):
     if cursor:
         cursor = Cursor(urlsafe=cursor)
 
-    q = BlogPost.query().order(-BlogPost.published_date)
+    q = BlogPost.query().order(-BlogPost.published_date).filter()
 
     if cursor:
         entities, next_cursor, more = q.fetch_page(limit)
@@ -125,6 +124,19 @@ def edit_post(post, cleaned_data):
         # Set the published date - note this is never unset if it is unchecked
         post.published_date = datetime.now()
 
+    category_keys = []
+    for keystr in cleaned_data['categories']:
+        category_keys.append(ndb.Key(urlsafe=keystr))
+
+    post.categories = category_keys
+
+    if cleaned_data['primary_media_image']:
+        blog_media_key = ndb.Key(urlsafe=cleaned_data['primary_media_image'])
+        post.primary_media_image = blog_media_key
+        post.attached_media.append(blog_media_key)
+    else:
+        post.primary_media_image = None
+
     post.put()
     return post
 
@@ -200,4 +212,10 @@ def get_images():
     # TODO: Paginate this, etc
     entities = BlogMedia.query().order(-BlogMedia.gcs_filename).fetch(1000)
     
+    return entities
+
+
+def get_categories():
+    # TODO: Paginate this, etc
+    entities = BlogCategory.query().fetch(1000)
     return entities
