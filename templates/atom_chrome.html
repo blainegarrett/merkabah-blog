@@ -1,0 +1,31 @@
+{% load tt_blog %}<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+	<title>Newest Posts in Blaine Garrett's Blog</title>
+	<subtitle>Be sure to subscribe.</subtitle>
+	<updated>2012-12-13T18:30:02Z</updated>
+	<id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
+
+	<link rel="alternate" href="http://www.blainegarrett.com/blog/" type="text/html" hreflang="en" />
+	{% ifequal 1 cur_page %}<link rel="self" href="http://www.blainegarrett.com/feed/atom/" type="application/atom+xml" />{% else %}<link rel="self" href="http://www.blainegarrett.com/feed/atom/{{ cur_page }}/" type="application/atom+xml" />{% endifequal%}
+	<link rel="first" href="http://www.blainegarrett.com/feed/atom/" type="application/atom+xml" />
+	{% if more %}<link rel="next" href="http://www.blainegarrett.com/feed/atom/{{ cur_page|add:"1" }}/" type="application/atom+xml" />{% endif %}
+
+	{% comment %}<link rel="last" href="http://www.blainegarrett.com/feed/atom/" type="application/atom+xml" />{% endcomment %}
+    <rights>Copyright (c) 2007-  2013, Blaine Garrett</rights>
+	{% for post in posts %}
+	<entry>
+		<title>{{ post.title }}</title>
+		<link rel="alternate" type="text/html" href="http://www.blainegarrett.com{{ post.get_permalink }}" />
+		<id>http://www.blainegarrett.com{{ post.get_permalink }}</id>
+		<updated>{{ post.modified_date|date:"Y-m-d\TH:i:s\Z" }}</updated>
+		<published>{{ post.published_date|date:"Y-m-d\TH:i:s\Z" }}</published>
+		<summary>{% render_excerpt post %}</summary>
+		<author>
+			<name>Blaine Garrett</name>
+			<email>blaine@blainegarrett.com</email>
+			<uri>http://www.blainegarrett.com/</uri>
+		</author>
+	</entry>
+	{% endfor %}
+</feed>

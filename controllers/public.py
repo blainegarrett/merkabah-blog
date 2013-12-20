@@ -47,6 +47,47 @@ class BlogCtrl(BlogBaseCtrl):
         return result
 
 
+class FeedBaseCtrl(BlogBaseCtrl):
+    """
+    Base FeedClass for RSS/Atom Feeds
+    """
+    def process_request(self, request, context, *args, **kwargs):
+        # Blog index page - display a page worth of posts
+
+        result = super(FeedBaseCtrl, self).process_request(request, context, *args, **kwargs)
+        if not result:
+            page_number = int(kwargs.get('page_number', 1))
+            posts, cursor, more = blog_api.get_published_posts(page_number)
+            context['posts'] = posts
+            context['cursor'] = cursor
+            context['more'] = more
+            context['cur_page'] = page_number
+        return result
+
+
+class AtomCtrl(FeedBaseCtrl):
+    """
+    Display a paginated list of lastest blog posts
+    """
+
+    view_name = 'blog_atom'
+    template = 'plugins/blog/index.html'
+    content_title = 'Blog'
+    chrome_template = 'plugins/blog/atom_chrome.html'
+    content_type = 'application/atom+xml'
+
+
+class RssCtrl(FeedBaseCtrl):
+    """
+    Display a paginated list of lastest blog posts
+    """
+
+    view_name = 'blog_rss'
+    template = 'plugins/blog/index.html'
+    content_title = 'Blog'
+    chrome_template = 'plugins/blog/rss_chrome.html'
+    content_type = 'application/rss+xml'
+
 class BlogCategoryCtrl(BlogBaseCtrl):
     view_name = 'artwork_index'
     template = 'plugins/blog/index.html'
