@@ -74,13 +74,16 @@ def get_published_posts(page_number=1, limit=POSTS_PER_PAGE):
     p_map = {}
     for p in posts:
         if p.primary_media_image:
-            p_map[p.primary_media_image] = p
+            if not p_map.get(p.primary_media_image, None):
+                p_map[p.primary_media_image] = []
+            p_map[p.primary_media_image].append(p)
 
     images = ndb.get_multi(p_map.keys())
     for image in images:
-        post = p_map.get(image.key, None)
-        if post and image:
-            setattr(post, 'get_primary_media_image', image)
+        p_list = p_map.get(image.key, None)
+        if p_list and image:
+            for p in p_list:
+                setattr(p, 'get_primary_media_image', image)
     
     return posts, cursor, more
 
