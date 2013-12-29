@@ -15,6 +15,7 @@ from plugins.blog.constants import PUBLISHED_DATE_MIN
 # Posts
 ###########################
 
+
 def get_post_by_slug(slug):
     post = BlogPost.query(BlogPost.slug == slug).get()
     #TODO: Check if published or not
@@ -44,8 +45,8 @@ def get_published_posts(page_number=1, limit=POSTS_PER_PAGE):
     Return a list of posts
     """
 
-    q = BlogPost.query().filter(BlogPost.published_date > PUBLISHED_DATE_MIN).order(-BlogPost.published_date)
-
+    q = BlogPost.query().filter(BlogPost.published_date > PUBLISHED_DATE_MIN)
+    q.order(-BlogPost.published_date)
     # Check if cursor index is in memcache
     cursor_index_key = 'cursor_index' # TODO: Build this from the query
     cursor_index = memcache.get(cursor_index_key)
@@ -56,7 +57,7 @@ def get_published_posts(page_number=1, limit=POSTS_PER_PAGE):
         cursor_index = build_index(q)
 
         memcache.set(cursor_index_key, cursor_index)
-    
+
     # Fetch the cursor based on the page #
     #TODO: Catch index error!
 
@@ -68,9 +69,9 @@ def get_published_posts(page_number=1, limit=POSTS_PER_PAGE):
 
     # Run the query
     posts, cursor, more = q.fetch_page(limit, start_cursor=cursor)
-    
+
     # Finally, bulk dereference the primary image
-    
+
     p_map = {}
     for p in posts:
         if p.primary_media_image:
@@ -81,14 +82,14 @@ def get_published_posts(page_number=1, limit=POSTS_PER_PAGE):
         post = p_map.get(image.key, None)
         if post and image:
             setattr(post, 'get_primary_media_image', image)
-    
+
     return posts, cursor, more
 
 
 def create_post(cleaned_data):
     """
     """
-    
+
     # Category checks
     category_keys = []
     for keystr in cleaned_data['categories']:
@@ -103,8 +104,7 @@ def create_post(cleaned_data):
         content=cleaned_data['content'],
         slug=cleaned_data['slug'],
         categories=category_keys,
-        published_date = published_date
-    )
+        published_date = published_date)
 
     if cleaned_data['primary_media_image']:
         blog_media_key = ndb.Key(urlsafe=cleaned_data['primary_media_image'])
@@ -115,6 +115,7 @@ def create_post(cleaned_data):
 
     post.put()
     return post
+
 
 def edit_post(post, cleaned_data):
     post.is_published = cleaned_data['publish']
@@ -133,7 +134,8 @@ def edit_post(post, cleaned_data):
 def get_published_posts(page_number=1, limit=POSTS_PER_PAGE):
     """
     Return a list of posts
-    TODO: Pagination works on the idea that you have been to that page before, if first hit.. fire off deferred task to populate the index
+    TODO: Pagination works on the idea that you have been to that page before, if first hit..
+    fire off deferred task to populate the index
     """
 
     memcache_cursor_key = 'public_blog_page_cursor_%s'
@@ -155,7 +157,7 @@ def get_published_posts(page_number=1, limit=POSTS_PER_PAGE):
     else:
         entities, next_cursor, more = q.fetch_page(limit)
 
-    page_cursor_cache_key = memcache_cursor_key % (page_number + 1)     
+    page_cursor_cache_key = memcache_cursor_key % (page_number + 1)
     memcache.set(page_cursor_cache_key, next_cursor.urlsafe())
 
     return entities, next_cursor, more
@@ -188,7 +190,7 @@ def build_index(q):
 
     for c in cursors:
         logging.warning(c)
-    
+
     # Construct index
     return {'total_pages': total_pages, 'total_items': total_items, 'cursors': cursors}
 
@@ -196,8 +198,10 @@ def build_index(q):
 #####################
 # Images
 #####################
+
+
 def get_images():
     # TODO: Paginate this, etc
     entities = BlogMedia.query().order(-BlogMedia.gcs_filename).fetch(1000)
-    
+
     return entities
