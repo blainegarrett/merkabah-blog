@@ -12,16 +12,15 @@ class BlogPostActionColumn(merkabah_datatable.DatatableColumn):
         output = ''
         link = '#'
         link = obj.get_permalink()
-        output += '<a href="%s" class="button">View</a>' % link
+        output += '<a href="%s" class="btn btn-default">View</a>' % link
 
         link = '/madmin/plugin/blog/edit/?post_key=%s' % obj.key.urlsafe()
-        output += '<a href="%s" class="button action">Edit</a>' % link
+        output += '<a href="%s" class="btn btn-default">Edit</a>' % link
 
         link = '/madmin/plugin/blog/delete/?post_key=%s' % obj.key.urlsafe()
-        output += '<a href="%s" class="button action">Delete</a>' % link
+        output += '<a href="%s" class="btn btn-default action">Delete</a>' % link
 
-
-        return output
+        return '<div class="btn-default">%s</div>' % output
 
 
 class BlogCategoryActionColumn(merkabah_datatable.DatatableColumn):
@@ -30,7 +29,7 @@ class BlogCategoryActionColumn(merkabah_datatable.DatatableColumn):
 
     def render_content(self, obj):
         link = '/madmin/plugin/blog/delete_category/?category_key=%s' % obj.key.urlsafe()
-        return '<a href="%s" class="button">Delete</a>' % link
+        return '<a href="%s" class="btn btn-default">Delete</a>' % link
 
 
 class BlogGroupActions(object):
@@ -39,13 +38,7 @@ class BlogGroupActions(object):
 
     def render_content(self):
         link = '/madmin/plugin/blog/create/'
-        output = '<a href="%s" class="action btn-primary btn">Create</a>&nbsp;&nbsp;&nbsp;' % link
-
-        link = '/madmin/plugin/blog/images/'
-        output += '<a href="%s" class="btn">Images</a>' % link
-
-        link = '/madmin/plugin/blog/categories/'
-        output += '<a href="%s" class="btn">Categories</a>' % link
+        output = '<a href="%s" class="btn-primary btn">Create</a>' % link
         return output
 
 class BlogCategoryGroupActions(object):
@@ -53,7 +46,7 @@ class BlogCategoryGroupActions(object):
     """
     def render_content(self):
         link = '/madmin/plugin/blog/create_category/'
-        output = '<a href="%s" class="action btn-primary btn">Create</a>&nbsp;&nbsp;&nbsp;' % link
+        output = '<a href="%s" class="btn-primary btn">Create</a>&nbsp;&nbsp;&nbsp;' % link
         return output
 
 
@@ -63,7 +56,7 @@ class BlogImageActionColumn(merkabah_datatable.DatatableColumn):
 
     def render_content(self, obj):
         link = '/madmin/plugin/blog/delete_image/?media_key=%s' % obj.key.urlsafe()
-        return '<a href="%s" class="action button">Delete</a>' % link
+        return '<a href="%s" class="btn btn-default">Delete</a>' % link
 
 
 class BlogPostGrid(merkabah_datatable.Datatable):
@@ -103,8 +96,9 @@ class BlogMediaThumbnailColumn(merkabah_datatable.DatatableColumn):
     def render_content(self, obj):
         """
         """
+        img_url = obj.get_url()
 
-        output = 'http://commondatastorage.googleapis.com/blaine-garrett/' + obj.gcs_filename + '<br /><a href="http://commondatastorage.googleapis.com/blaine-garrett/' + obj.gcs_filename + '"><img class="thumbnail" src="http://commondatastorage.googleapis.com/blaine-garrett/' + obj.gcs_filename + '" style="max-width:100px;max-height:50px;" alt="Placeholder Image" /></a>'
+        output = '<a href="%s"><img class="thumbnail" src="%s" style="max-width:300px;max-height:200px;" alt="Placeholder Image" /></a>' % (img_url, img_url)
         return output
 
 
@@ -117,7 +111,7 @@ class BlogMediaGroupActions(object):
         """
 
         link = '/madmin/plugin/blog/images_create/'
-        return '<a href="%s" class="action btn-primary btn">Create</a>' % link
+        return '<a href="%s" class="btn-primary btn">Create</a>' % link
 
 
 class BlogMediaGrid(merkabah_datatable.Datatable):

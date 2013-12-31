@@ -30,6 +30,23 @@ class BlogMedia(ndb.Model):
     @property
     def size_in_kb(self):
         return self.size * 1000
+    
+    def get_url(self):
+        from merkabah import is_appspot, get_domain
+        import settings
+        
+        if is_appspot():
+            domain = 'commondatastorage.googleapis.com' #TODO: Make this definable in a setting
+        else:
+            domain = get_domain()
+
+        bucket = settings.DEFAULT_GS_BUCKET_NAME
+        path = self.gcs_filename
+        
+        if not is_appspot():
+            bucket = "_ah/gcs/%s" % bucket
+        url = 'http://%s/%s/%s' % (domain, bucket, path)
+        return url
 
 
 class BlogCategory(ndb.Model):

@@ -1,7 +1,7 @@
 """
 Merkabah Blog Plugin
 """
-
+import settings
 from plugins.blog.forms import BlogPostForm, ImageUploadForm, BlogCategoryForm
 from plugins.blog.internal.api import get_posts, get_images, get_categories
 
@@ -15,6 +15,8 @@ import logging
 from merkabah.core.controllers import TemplateResponse, FormDialogResponse, AlertResponse
 from merkabah.core.controllers import FormResponse, FormErrorResponse, CloseFormResponse, GridRowResponse
 
+from settings import DEFAULT_GS_BUCKET_NAME
+
 class BlogPlugin(object):
     """
     Base Blog Plugin Class
@@ -26,6 +28,10 @@ class BlogPlugin(object):
     query_method = get_posts
 
     def process_index(self, request, context, *args, **kwargs):
+        context['plugin'] = self
+        return TemplateResponse('admin/plugin/dashboard.html', context)
+        
+    def process_posts(self, request, context, *args, **kwargs):
         """
         Driver switchboard logic
         """
@@ -53,9 +59,8 @@ class BlogPlugin(object):
             else:
                 return FormErrorResponse(form, id='create_form')
 
-        if request.is_ajax():
-            return FormResponse(form, id='create_form', title="Create a new Blog Post", target_url='/madmin/plugin/blog/create/', target_action='create')
-        return TemplateResponse('admin/plugin/inline_form_wrapper.html', context)
+        return FormResponse(form, id='create_form', title="Create a new Blog Post", target_url='/madmin/plugin/blog/create/', target_action='create')
+
 
     def process_edit(self, request, context, *args, **kwargs):
         post_keystr = request.REQUEST['post_key']
@@ -90,9 +95,7 @@ class BlogPlugin(object):
             else:
                 return FormErrorResponse(form, id='create_form')
 
-        if request.is_ajax():
-            return FormResponse(form, id='edit_form', title="Edit Blog Post", target_url='/madmin/plugin/blog/edit/?post_key=%s' % post_key.urlsafe(), target_action='edit')
-        return TemplateResponse('admin/plugin/inline_form_wrapper.html', context)
+        return FormResponse(form, id='edit_form', title="Edit Blog Post", target_url='/madmin/plugin/blog/edit/?post_key=%s' % post_key.urlsafe(), target_action='edit')
 
 
     def process_delete(self, request, context, *args, **kwargs):
@@ -116,15 +119,17 @@ class BlogPlugin(object):
         from google.appengine.ext import blobstore
 
         # Get the file upload url
-        fs = Cloudstorage('blaine-garrett')
+
+        fs = Cloudstorage(DEFAULT_GS_BUCKET_NAME)
 
         form = ImageUploadForm()
         
         context['form'] = form
+        has_files = fs.get_uploads(request, 'the_file', True)
+        
 
-        if request.POST:
-            file_info = fs.get_uploads(request, 'the_file', True)[0]
-
+        if has_files:
+            file_info = has_files[0]
 
             original_filename = file_info.filename
             content_type = file_info.content_type
@@ -146,9 +151,11 @@ class BlogPlugin(object):
             data =  fs.delete(gs_object_name.replace('/gs', ''))
 
             media_key = BlogMedia(content_type=content_type, size=size, filename=dest_filename, gcs_filename = dest_filename).put()
-
+            
+            #http://192.168.1.102:8080/_ah/gcs/dim-media/juniper/993782_10151441159702751_1645270937_n.jpg
+            #http://<host>/_ah/gcs/dim-media/juniper/993782_10151441159702751_1645270937_n.jpg
+            #/dim-media/juniper/993782_10151441159702751_1645270937_n.jpg
             raise Exception(new_gcs_filename)
-
 
 
         from merkabah.core.files.api.cloudstorage import Cloudstorage
@@ -156,17 +163,13 @@ class BlogPlugin(object):
 
         upload_url = fs.create_upload_url('/madmin/plugin/blog/images_create/')
         
-        if request.is_ajax():
-            return FormResponse(form, id='images_create_form', title="Upload a file", target_url=upload_url, target_action='images_create', is_upload=True)
-        return TemplateResponse('admin/plugin/inline_form_wrapper.html', context)
+        return FormResponse(form, id='images_create_form', title="Upload a file", target_url=upload_url, target_action='images_create', is_upload=True)
 
     def process_categories(self, request, context, *args, **kwargs):
 
         entities = get_categories()
         context['grid'] = BlogCategoryGrid(entities, request, context)
-
-        return TemplateResponse('plugins/blog/categories.html', context)
-
+        return TemplateResponse('admin/plugin/index.html', context)
 
     def process_create_category(self, request, context, *args, **kwargs):
         form = BlogCategoryForm()
@@ -183,10 +186,7 @@ class BlogPlugin(object):
                 cat.put()
                 return AlertResponse('Category Created. Please Reload.')
 
-        if request.is_ajax():
-            return FormResponse(form, id='categories_create_form', title="Create", target_url='/madmin/plugin/blog/create_category/', target_action='create_category')
-        return TemplateResponse('admin/plugin/inline_form_wrapper.html', context)
-
+        return FormResponse(form, id='categories_create_form', title="Create", target_url='/madmin/plugin/blog/create_category/', target_action='create_category')
 
     def process_delete_category(self, request, context, *args, **kwargs):
         """
@@ -214,14 +214,14 @@ class BlogPlugin(object):
         from merkabah.core.files.api.cloudstorage import Cloudstorage
         
         # Get the file upload url
-        fs = Cloudstorage('blaine-garrett')
+        fs = Cloudstorage(settings.DEFAULT_GS_BUCKET_NAME)
         context['upload_url'] = fs.create_upload_url('/upload_endpoint/')
 
         entities = get_images()
         context['grid'] = BlogMediaGrid(entities, request, context)
 
-        return TemplateResponse('plugins/blog/images.html', context)
-    
+        return TemplateResponse('admin/plugin/index.html', context)
+
     def process_delete_image(self, request, context, *args, **kwargs):
         """
         """
@@ -241,7 +241,7 @@ class BlogPlugin(object):
             logging.debug('Media with key %s did not have a gs_filename.' % media_keystr)
         else:
             # TODO: Do this in a deferred task
-            fs = Cloudstorage('blaine-garrett')
+            fs = Cloudstorage(settings.DEFAULT_GS_BUCKET_NAME)
             fs.delete(media.gcs_filename)
 
         # Delete the entity that refers to the gcs file
