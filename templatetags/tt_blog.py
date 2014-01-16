@@ -118,6 +118,12 @@ def render_excerpt(post):
     VALID_TAGS = ['p']
 
     content = post.content
+    
+    has_more = '<!-- more -->'
+    
+    has_more = content.find('<!-- more -->')
+    if has_more > -1:
+        content = content[:has_more]
 
     content = re.sub(r"(\[caption)([^\]]*)(])(.*)(\[/caption\])", '', content)
     content = re.sub(r'(\[source((code)*? lang(uage)*?)*?=([\'"]*?)(python)([\'"]*?)])(.*?)(\[/source(code)*?\])', '', content, flags=re.MULTILINE|re.DOTALL)
@@ -137,6 +143,7 @@ def render_excerpt(post):
 
 @register.simple_tag
 def render_content(content):
+
     # Apply rendering filter plugins
     #TODO: Make this more modular
     
@@ -157,6 +164,21 @@ def render_content(content):
             code = m.group(8).replace('\n','<NEWLINE />')
             return '<pre>' + code + '</pre>'
 
+    def slider_short_code_proc(m):
+        slide_html = ''
+        if m.group(2):
+            code = m.group(2).replace('<br />','')
+            slide_defs = code.split('\n')
+            for slide_def in slide_defs:
+                bits = slide_def.split('|')
+                if (len(bits) == 3):
+                    slide_html += '<li><img src="%s" alt="%s" /></a><h3><span>%s</span><a href="%s" target="_new">%s<br />&nbsp;</a></li>' % (bits[0].strip(), bits[1].strip(), bits[1].strip(), bits[0].strip(), bits[2].strip())
+
+        
+        output = '<div id="mainslider" class="flexslider"><ul class="slides">%s</ul></div>' % slide_html
+        return output
+
+
     def wp_caption_shortcode_proc(m):
         classes = ['thumbnail']
         attrs = str(m.group(2))
@@ -170,11 +192,13 @@ def render_content(content):
         
         #return '<div' + attrs + '>' + m.group(4) + '<div class="caption"><h4>Brad Majors, CEO</h4><p>Etiam fermentum convallis ullamcorper. Curabitur vel vestibulum leo.</p></div></div>'
         return '<div' + attrs + '>' + m.group(4) + '</div>'
-    
+
     # WP Caption shortcode
     content = re.sub(r"(\[caption)([^\]]*)(])(.*)(\[/caption\])", wp_caption_shortcode_proc, content)
     content = re.sub(r'(\[source((code)*? lang(uage)*?)*?=([\'"]*?)(python)([\'"]*?)])(.*?)(\[/source(code)*?\])', wp_code_shortcode_proc, content, flags=re.MULTILINE|re.DOTALL)
 
+    content = re.sub(r'(\[slider\])(.*?)(\[/slider\])', slider_short_code_proc, content, flags=re.MULTILINE|re.DOTALL)
+    
     content = re.sub(r"(\[caption)([^\]]*)(])(.*)(\[/caption\])", wp_caption_shortcode_proc, content)
     content = re.sub(r"(\[youtube:)([^\]]*)(])", wp_youtube_shortcode_proc, content)
     
