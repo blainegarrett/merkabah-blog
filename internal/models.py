@@ -2,8 +2,11 @@ from __future__ import absolute_import
 
 import logging
 
+
 from google.appengine.ext import ndb
 from django.core import urlresolvers
+
+from merkabah.core.auth.models import User
 from ..constants import BLOGPOST_KIND
 from ..constants import BLOGMEDIA_KIND
 from ..constants import BLOGCATEGORY_KIND
@@ -30,6 +33,9 @@ class BlogMedia(ndb.Model):
     content_type = ndb.StringProperty()
     gcs_filename = ndb.StringProperty()
     size = ndb.IntegerProperty()
+    creator = ndb.KeyProperty(kind=User)
+    created_date = ndb.DateTimeProperty(auto_now_add=True)
+    modified_date = ndb.DateTimeProperty(auto_now=True)
 
     @property
     def size_in_kb(self):
@@ -66,6 +72,9 @@ class BlogCategory(ndb.Model):
 
     slug = ndb.StringProperty()
     name = ndb.StringProperty()
+    creator = ndb.KeyProperty(kind=User)
+    created_date = ndb.DateTimeProperty(auto_now_add=True)
+    modified_date = ndb.DateTimeProperty(auto_now=True)
 
     @classmethod
     def _get_kind(cls):
@@ -83,12 +92,13 @@ class BlogPost(ndb.Model):
     slug = ndb.StringProperty()
     content = ndb.TextProperty()
     published_date = ndb.DateTimeProperty()
-    created_date = ndb.DateTimeProperty(auto_now_add=True)
-    modified_date = ndb.DateTimeProperty(auto_now=True)
     categories = ndb.KeyProperty(repeated=True, kind=BlogCategory)
     primary_media_image = ndb.KeyProperty(kind=BlogMedia)
     attached_media = ndb.KeyProperty(repeated=True, kind=BlogMedia)
     is_published = ndb.BooleanProperty(default=False)
+    creator = ndb.KeyProperty(kind=User)
+    created_date = ndb.DateTimeProperty(auto_now_add=True)
+    modified_date = ndb.DateTimeProperty(auto_now=True)
 
     @classmethod
     def _get_kind(cls):
