@@ -88,7 +88,7 @@ def get_published_posts(page_number=1, limit=POSTS_PER_PAGE):
     return posts, cursor, more
 
 
-def create_post(cleaned_data):
+def create_post(user, cleaned_data):
     """
     """
 
@@ -106,6 +106,7 @@ def create_post(cleaned_data):
         content=cleaned_data['content'],
         slug=cleaned_data['slug'],
         categories=category_keys,
+        creator=user.key,
         published_date=published_date)
 
     if cleaned_data['primary_media_image']:
@@ -119,7 +120,7 @@ def create_post(cleaned_data):
     return post
 
 
-def edit_post(post, cleaned_data):
+def edit_post(user, post, cleaned_data):
     post.is_published = cleaned_data['publish']
     post.content = cleaned_data['content']
     post.title = cleaned_data['title']

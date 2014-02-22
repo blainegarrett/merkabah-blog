@@ -47,13 +47,14 @@ class BlogPlugin(object):
 
 
     def process_create(self, request, context, *args, **kwargs):
+
         form = BlogPostForm()
 
         if request.POST:
             form = BlogPostForm(request.POST)
             if form.is_valid():
 
-                p = create_post(form.cleaned_data)
+                p = create_post(context['user'], form.cleaned_data)
     
                 # Serve up the new row
                 return HttpResponseRedirect(urlresolvers.reverse('admin_plugin_action', args=(context['plugin_slug'], 'posts')))
@@ -89,7 +90,7 @@ class BlogPlugin(object):
             form = BlogPostForm(request.POST, initial=initial_data)
             if form.is_valid():
 
-                p = edit_post(post, form.cleaned_data)
+                p = edit_post(context['user'], post, form.cleaned_data)
 
                 # Serve up the new row
                 return HttpResponseRedirect(urlresolvers.reverse('admin_plugin_action', args=(context['plugin_slug'], 'posts')))
