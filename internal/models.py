@@ -107,13 +107,18 @@ class BlogPost(ndb.Model):
     def get_primary_image_url(self):
         return BlogMedia.get(self.primary_media_image).filename
 
+    def get_slug(self):
+        dt = self.published_date
+        if dt:
+            return'%02d/%02d/%02d/%s/' % (dt.year, dt.month, dt.day, self.slug)
+        return None
+
     def get_permalink(self):
         """
         """
 
-        dt = self.published_date
-        if dt:
-            pub_slug = '%02d/%02d/%02d/%s/' % (dt.year, dt.month, dt.day, self.slug)
+        pub_slug = self.get_slug()
+        if pub_slug:
             return urlresolvers.reverse('blog_view', kwargs={'permalink': pub_slug})
         else:
             return '#'
