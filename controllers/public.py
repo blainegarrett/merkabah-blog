@@ -5,8 +5,7 @@ from ..internal import api as blog_api
 from django.http import Http404, HttpResponsePermanentRedirect
 from django.core.urlresolvers import reverse
 from ..config import BaseCtrlClass
-
-PLUGIN_INSTALL = 'crumbs_blog'
+from ..constants import PLUGIN_SLUG
 
 class BlogBaseCtrl(BaseCtrlClass):
     """
@@ -28,7 +27,7 @@ class BlogCtrl(BlogBaseCtrl):
     """
 
     view_name = 'blog_index'
-    template = 'plugins/' + PLUGIN_INSTALL + '/index.html'
+    template = 'plugins/' + PLUGIN_SLUG + '/index.html'
     content_title = 'Blog'
 
     @property
@@ -73,7 +72,7 @@ class AtomCtrl(FeedBaseCtrl):
     """
 
     view_name = 'blog_atom'
-    template = 'plugins/' + PLUGIN_INSTALL + '/index.html'
+    template = 'plugins/' + PLUGIN_SLUG + '/index.html'
     content_title = 'Blog'
     chrome_template = 'plugins/blog/atom_chrome.html'
     content_type = 'application/atom+xml'
@@ -85,7 +84,7 @@ class RssCtrl(FeedBaseCtrl):
     """
 
     view_name = 'blog_rss'
-    template = 'plugins/' + PLUGIN_INSTALL + '/index.html'
+    template = 'plugins/' + PLUGIN_SLUG + '/index.html'
     content_title = 'Blog'
     chrome_template = 'plugins/blog/rss_chrome.html'
     content_type = 'application/rss+xml'
@@ -117,7 +116,7 @@ class BlogPermalinkCtrl(BlogBaseCtrl):
 
     # TODO: Handle case when post not found or is not public
     view_name = 'blog_view'
-    template = 'plugins/' + PLUGIN_INSTALL + '/view.html'
+    template = 'plugins/' + PLUGIN_SLUG + '/view.html'
     content_title = 'Post'
 
     @property
