@@ -2,18 +2,21 @@
 Merkabah Blog Plugin
 """
 import settings
-from plugins.blog.forms import BlogPostForm, ImageUploadForm, BlogCategoryForm
-from plugins.blog.internal.api import get_posts, get_images, get_categories
+from forms import BlogPostForm, ImageUploadForm, BlogCategoryForm
+from internal.api import get_posts, get_images, get_categories
 
-from plugins.blog.internal.api import create_post, edit_post
-from plugins.blog.internal.models import BlogMedia, BlogCategory
+from internal.api import create_post, edit_post
+from internal.models import BlogMedia, BlogCategory
 
 from google.appengine.ext import ndb
 
-from plugins.blog.datatables import BlogPostGrid, BlogMediaGrid, BlogCategoryGrid
+from django.core import urlresolvers
+
+from datatables import BlogPostGrid, BlogMediaGrid, BlogCategoryGrid
 import logging
 from merkabah.core.controllers import TemplateResponse, FormDialogResponse, AlertResponse
 from merkabah.core.controllers import FormResponse, FormErrorResponse, CloseFormResponse, GridRowResponse
+from django.http import HttpResponseRedirect
 
 from settings import DEFAULT_GS_BUCKET_NAME
 
@@ -53,13 +56,13 @@ class BlogPlugin(object):
                 p = create_post(form.cleaned_data)
     
                 # Serve up the new row
-                content = str(BlogPostGrid([p], request, context).render_row(p))
-                return CloseFormResponse('create_form'), GridRowResponse(content, id='dashboard-container', guid=p.key.urlsafe())
+                return HttpResponseRedirect(urlresolvers.reverse('admin_plugin_action', args=(context['plugin_slug'], 'posts')))
 
             else:
                 return FormErrorResponse(form, id='create_form')
 
-        return FormResponse(form, id='create_form', title="Create a new Blog Post", target_url='/madmin/plugin/blog/create/', target_action='create')
+        target_url = urlresolvers.reverse('admin_plugin_action', args=(context['plugin_slug'], 'create'))
+        return FormResponse(form, id='create_form', title="Create a new Blog Post", target_url=target_url, target_action='create')
 
 
     def process_edit(self, request, context, *args, **kwargs):
@@ -89,13 +92,13 @@ class BlogPlugin(object):
                 p = edit_post(post, form.cleaned_data)
 
                 # Serve up the new row
-                content = str(BlogPostGrid([p], request, context).render_row(p))
-                return CloseFormResponse('edit_form'), GridRowResponse(content, id='dashboard-container', guid=p.key.urlsafe())
-
+                return HttpResponseRedirect(urlresolvers.reverse('admin_plugin_action', args=(context['plugin_slug'], 'posts')))
             else:
                 return FormErrorResponse(form, id='create_form')
 
-        return FormResponse(form, id='edit_form', title="Edit Blog Post", target_url='/madmin/plugin/blog/edit/?post_key=%s' % post_key.urlsafe(), target_action='edit')
+        target_url = "%s?post_key=%s" % (urlresolvers.reverse('admin_plugin_action', args=(context['plugin_slug'], 'edit')), post_key.urlsafe())
+
+        return FormResponse(form, id='edit_form', title="Edit Blog Post", target_url=target_url, target_action='edit')
 
 
     def process_delete(self, request, context, *args, **kwargs):
@@ -111,7 +114,7 @@ class BlogPlugin(object):
 
         # Delete the entity that refers to the gcs file
         post_key.delete()
-        return AlertResponse('Deleted...')
+        return HttpResponseRedirect(urlresolvers.reverse('admin_plugin_action', args=(context['plugin_slug'], 'posts')))
 
 
     def process_images_create(self, request, context, *args, **kwargs):

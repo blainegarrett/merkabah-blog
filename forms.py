@@ -1,6 +1,7 @@
 from merkabah.core import forms as merkabah_forms
 from django import forms
-from plugins.blog.internal import models as blog_models
+
+from .internal import models as blog_models
 
 class ImageUploadForm(merkabah_forms.MerkabahBaseForm):
     title = forms.CharField(max_length=50)
@@ -21,7 +22,7 @@ class BlogPostForm(merkabah_forms.MerkabahBaseForm):
 
         # Primary Image
         media_choices = [('', 'None Selected')]
-        media_entities = blog_models.BlogMedia.query().fetch(1000)
+        media_entities = blog_models.BlogMedia.query().fetch(1000) # TODO: Convert to api method
         for media_entity in media_entities:
             media_choices.append((media_entity.key.urlsafe(), media_entity.filename))
         

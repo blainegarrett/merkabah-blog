@@ -6,7 +6,7 @@ from django.template.loader import render_to_string
 import logging
 import re
 
-from plugins.blog.internal import api as blog_api
+from ..internal import api as blog_api
 
 register = Library()
 

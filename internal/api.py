@@ -6,9 +6,9 @@ from google.appengine.api import memcache
 
 from google.appengine.ext import ndb
 
-from plugins.blog.internal.models import BlogPost, BlogMedia, BlogCategory
-from plugins.blog.constants import POSTS_PER_PAGE
-from plugins.blog.constants import PUBLISHED_DATE_MIN
+from ..internal.models import BlogPost, BlogMedia, BlogCategory
+from ..constants import POSTS_PER_PAGE
+from ..constants import PUBLISHED_DATE_MIN
 
 ############################
 # Posts
