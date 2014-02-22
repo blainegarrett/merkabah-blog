@@ -4,11 +4,15 @@ import logging
 
 from google.appengine.ext import ndb
 from django.core import urlresolvers
+from ..constants import BLOGPOST_KIND
+from ..constants import BLOGMEDIA_KIND
+from ..constants import BLOGCATEGORY_KIND
 
 
 class Page(ndb.Model):
     """
     Blog Pages module - currently Not in use
+    TODO: Convert this to its own plugin
     """
 
     primary_content = ndb.TextProperty()
@@ -30,11 +34,11 @@ class BlogMedia(ndb.Model):
     @property
     def size_in_kb(self):
         return self.size * 1000
-    
+
     def get_url(self):
         from merkabah import is_appspot, get_domain
         import settings
-        
+
         if is_appspot():
             domain = 'commondatastorage.googleapis.com' #TODO: Make this definable in a setting
         else:
@@ -42,11 +46,15 @@ class BlogMedia(ndb.Model):
 
         bucket = settings.DEFAULT_GS_BUCKET_NAME
         path = self.gcs_filename
-        
+
         if not is_appspot():
             bucket = "_ah/gcs/%s" % bucket
         url = 'http://%s/%s/%s' % (domain, bucket, path)
         return url
+
+    @classmethod
+    def _get_kind(cls):
+        return BLOGMEDIA_KIND # This can be overriden in the plugin.config
 
 
 class BlogCategory(ndb.Model):
@@ -58,6 +66,10 @@ class BlogCategory(ndb.Model):
 
     slug = ndb.StringProperty()
     name = ndb.StringProperty()
+
+    @classmethod
+    def _get_kind(cls):
+        return BLOGCATEGORY_KIND # This can be overriden in the plugin.config
 
 
 class BlogPost(ndb.Model):
@@ -78,12 +90,17 @@ class BlogPost(ndb.Model):
     attached_media = ndb.KeyProperty(repeated=True, kind=BlogMedia)
     is_published = ndb.BooleanProperty(default=False)
 
+    @classmethod
+    def _get_kind(cls):
+        return BLOGPOST_KIND # This can be overriden in the plugin.config
+
     def get_primary_image_url(self):
         return BlogMedia.get(self.primary_media_image).filename
 
     def get_permalink(self):
         """
         """
+
         dt = self.published_date
         if dt:
             pub_slug = '%02d/%02d/%02d/%s/' % (dt.year, dt.month, dt.day, self.slug)

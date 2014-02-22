@@ -1,10 +1,12 @@
 """
 A Collection of public controllers for the blog module
 """
-from plugins.blog.internal import api as blog_api
+from ..internal import api as blog_api
 from django.http import Http404, HttpResponsePermanentRedirect
 from django.core.urlresolvers import reverse
-from plugins.blog.config import BaseCtrlClass
+from ..config import BaseCtrlClass
+
+PLUGIN_INSTALL = 'crumbs_blog'
 
 class BlogBaseCtrl(BaseCtrlClass):
     """
@@ -26,7 +28,7 @@ class BlogCtrl(BlogBaseCtrl):
     """
 
     view_name = 'blog_index'
-    template = 'plugins/blog/index.html'
+    template = 'plugins/' + PLUGIN_INSTALL + '/index.html'
     content_title = 'Blog'
 
     @property
@@ -71,7 +73,7 @@ class AtomCtrl(FeedBaseCtrl):
     """
 
     view_name = 'blog_atom'
-    template = 'plugins/blog/index.html'
+    template = 'plugins/' + PLUGIN_INSTALL + '/index.html'
     content_title = 'Blog'
     chrome_template = 'plugins/blog/atom_chrome.html'
     content_type = 'application/atom+xml'
@@ -83,7 +85,7 @@ class RssCtrl(FeedBaseCtrl):
     """
 
     view_name = 'blog_rss'
-    template = 'plugins/blog/index.html'
+    template = 'plugins/' + PLUGIN_INSTALL + '/index.html'
     content_title = 'Blog'
     chrome_template = 'plugins/blog/rss_chrome.html'
     content_type = 'application/rss+xml'
@@ -93,7 +95,7 @@ class BlogCategoryCtrl(BlogBaseCtrl):
     template = 'plugins/blog/index.html'
 
     def process_request(self, request, context, *args, **kwargs):
-        from plugins.blog.internal import models as blog_models
+        from ..internal import models as blog_models
 
         result = super(BlogCategoryCtrl, self).process_request(request, context, *args, **kwargs)
         if not result:
@@ -115,7 +117,7 @@ class BlogPermalinkCtrl(BlogBaseCtrl):
 
     # TODO: Handle case when post not found or is not public
     view_name = 'blog_view'
-    template = 'plugins/blog/view.html'
+    template = 'plugins/' + PLUGIN_INSTALL + '/view.html'
     content_title = 'Post'
 
     @property

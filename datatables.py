@@ -1,12 +1,11 @@
 from merkabah.core import datatable as merkabah_datatable
 from django.core import urlresolvers
 
-
 class BlogPostActionColumn(merkabah_datatable.DatatableColumn):
     """
     """
 
-    def render_content(self, obj):
+    def render_content(self, obj, context):
         #link = urlresolvers.reverse('merkabah_admin_blog_post_edit', args=(obj.key.urlsafe(),))
         #output = '<a href="%s" class="button">Edit</a>' % link
         output = ''
@@ -14,10 +13,10 @@ class BlogPostActionColumn(merkabah_datatable.DatatableColumn):
         link = obj.get_permalink()
         output += '<a href="%s" class="btn btn-default">View</a>' % link
 
-        link = '/madmin/plugin/blog/edit/?post_key=%s' % obj.key.urlsafe()
+        link = "%s?post_key=%s" % (urlresolvers.reverse('admin_plugin_action', args=(context['plugin_slug'], 'edit')), obj.key.urlsafe())
         output += '<a href="%s" class="btn btn-default">Edit</a>' % link
 
-        link = '/madmin/plugin/blog/delete/?post_key=%s' % obj.key.urlsafe()
+        link = "%s?post_key=%s" % (urlresolvers.reverse('admin_plugin_action', args=(context['plugin_slug'], 'delete')), obj.key.urlsafe())
         output += '<a href="%s" class="btn btn-default action">Delete</a>' % link
 
         return '<div class="btn-default">%s</div>' % output
@@ -27,7 +26,9 @@ class BlogCategoryActionColumn(merkabah_datatable.DatatableColumn):
     """
     """
 
-    def render_content(self, obj):
+    def render_content(self, obj, context):
+        
+
         link = '/madmin/plugin/blog/delete_category/?category_key=%s' % obj.key.urlsafe()
         return '<a href="%s" class="btn btn-default">Delete</a>' % link
 
@@ -36,16 +37,16 @@ class BlogGroupActions(object):
     """
     """
 
-    def render_content(self):
-        link = '/madmin/plugin/blog/create/'
+    def render_content(self, context):
+        link = urlresolvers.reverse('admin_plugin_action', args=(context['plugin_slug'], 'create'))
         output = '<a href="%s" class="btn-primary btn">Create</a>' % link
         return output
 
 class BlogCategoryGroupActions(object):
     """
     """
-    def render_content(self):
-        link = '/madmin/plugin/blog/create_category/'
+    def render_content(self, context):
+        link = urlresolvers.reverse('admin_plugin_action', args=(context['plugin_slug'], 'create_category'))
         output = '<a href="%s" class="btn-primary btn">Create</a>&nbsp;&nbsp;&nbsp;' % link
         return output
 
@@ -54,7 +55,7 @@ class BlogImageActionColumn(merkabah_datatable.DatatableColumn):
     """
     """
 
-    def render_content(self, obj):
+    def render_content(self, obj, context):
         link = '/madmin/plugin/blog/delete_image/?media_key=%s' % obj.key.urlsafe()
         return '<a href="%s" class="btn btn-default">Delete</a>' % link
 
@@ -93,7 +94,7 @@ class BlogMediaThumbnailColumn(merkabah_datatable.DatatableColumn):
     """
     """
 
-    def render_content(self, obj):
+    def render_content(self, obj, context):
         """
         """
         img_url = obj.get_url()
@@ -106,11 +107,8 @@ class BlogMediaGroupActions(object):
     """
     """
 
-    def render_content(self):
-        """
-        """
-
-        link = '/madmin/plugin/blog/images_create/'
+    def render_content(self, context):
+        link = urlresolvers.reverse('admin_plugin_action', args=(context['plugin_slug'], 'images_create'))
         return '<a href="%s" class="btn-primary btn">Create</a>' % link
 
 

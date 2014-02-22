@@ -3,7 +3,7 @@ Default Blog URLs
 """
 
 from django.conf.urls.defaults import patterns, url
-from plugins.blog.controllers import public as bc
+from .controllers import public as bc
 
 urlpatterns = patterns('',
     
