@@ -44,8 +44,8 @@ def get_published_posts(page_number=1, limit=POSTS_PER_PAGE):
     Return a list of posts
     """
 
-    q = BlogPost.query().filter(BlogPost.published_date > PUBLISHED_DATE_MIN)
-    q.order(-BlogPost.published_date)
+    # Note, this needs to be on a single line
+    q = BlogPost.query().filter(BlogPost.published_date > PUBLISHED_DATE_MIN).order(-BlogPost.published_date)
     # Check if cursor index is in memcache
     cursor_index_key = 'cursor_index' # TODO: Build this from the query
     cursor_index = memcache.get(cursor_index_key)

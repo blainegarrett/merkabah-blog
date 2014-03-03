@@ -159,8 +159,8 @@ class BlogPlugin(object):
             #http://192.168.1.102:8080/_ah/gcs/dim-media/juniper/993782_10151441159702751_1645270937_n.jpg
             #http://<host>/_ah/gcs/dim-media/juniper/993782_10151441159702751_1645270937_n.jpg
             #/dim-media/juniper/993782_10151441159702751_1645270937_n.jpg
-            raise Exception(new_gcs_filename)
-
+            #raise Exception(new_gcs_filename)
+            return HttpResponseRedirect(urlresolvers.reverse('admin_plugin_action', args=(context['plugin_slug'], 'images')))
 
         from merkabah.core.files.api.cloudstorage import Cloudstorage
 
@@ -250,7 +250,8 @@ class BlogPlugin(object):
 
         # Delete the entity that refers to the gcs file
         media_key.delete()
-        return AlertResponse('Deleted...')
+        #return AlertResponse('Deleted...')
+        return HttpResponseRedirect(urlresolvers.reverse('admin_plugin_action', args=(context['plugin_slug'], 'images')))
 
     def process_select_image(self, request, context, *args, **kwargs):
         
