@@ -204,7 +204,7 @@ def render_content(content):
     
     
     # nl2br
-    content = content.replace('\n','<br />\n')
+    #content = content.replace('\n','<br />\n')
     content = content.replace('<NEWLINE />','\n')
 
     return mark_safe(content)    
