@@ -166,11 +166,16 @@ def render_content(content):
 
     def slider_short_code_proc(m):
         slide_html = ''
+        
+        import logging
+
+        
         if m.group(2):
             code = m.group(2).replace('<br />','')
             slide_defs = code.split('\n')
             for slide_def in slide_defs:
                 bits = slide_def.split('|')
+                logging.error(len(bits))
                 if (len(bits) == 3):
                     slide_html += '<li><img src="%s" alt="%s" /></a><h3><span>%s</span><a href="%s" target="_new">%s<br />&nbsp;</a></li>' % (bits[0].strip(), bits[1].strip(), bits[1].strip(), bits[0].strip(), bits[2].strip())
 
