@@ -181,8 +181,14 @@ def render_content(content):
 
     def slider_short_code_proc(m):
         slide_html = ''
+        logging.error(m)
+        
         if m.group(2):
             code = m.group(2).replace('<br />','')
+            
+            import logging
+            logging.error(code)
+
             slide_defs = code.split('\n')
             for slide_def in slide_defs:
                 bits = slide_def.split('|')
@@ -212,14 +218,14 @@ def render_content(content):
     content = re.sub(r"(\[caption)([^\]]*)(])(.*)(\[/caption\])", wp_caption_shortcode_proc, content)
     content = re.sub(r'(\[source((code)*? lang(uage)*?)*?=([\'"]*?)(python)([\'"]*?)])(.*?)(\[/source(code)*?\])', wp_code_shortcode_proc, content, flags=re.MULTILINE|re.DOTALL)
 
-    content = re.sub(r'(\[slider\])(.*?)(\[/slider\])', slider_short_code_proc, content, flags=re.MULTILINE|re.DOTALL)
+    #content = re.sub(r'(\[slider\])(.*?)(\[/slider\])', slider_short_code_proc, content, flags=re.MULTILINE|re.DOTALL)
     
     content = re.sub(r"(\[caption)([^\]]*)(])(.*)(\[/caption\])", wp_caption_shortcode_proc, content)
     content = re.sub(r"(\[youtube:)([^\]]*)(])", wp_youtube_shortcode_proc, content)
     
     
     # nl2br
-    content = content.replace('\n','<br />\n')
+    #content = content.replace('\n','<br />\n')
     content = content.replace('<NEWLINE />','\n')
 
     return mark_safe(content)    
