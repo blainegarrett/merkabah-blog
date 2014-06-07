@@ -6,6 +6,7 @@ from django.http import Http404, HttpResponsePermanentRedirect
 from django.core.urlresolvers import reverse
 from ..config import BaseCtrlClass
 from ..constants import PLUGIN_SLUG
+from google.appengine.ext import ndb
 
 
 class BlogBaseCtrl(BaseCtrlClass):
@@ -47,6 +48,16 @@ class BlogCtrl(BlogBaseCtrl):
             context['cursor'] = cursor
             context['more'] = more
             context['cur_page'] = page_number
+
+            if more:
+                context['more_url'] = reverse('blog_index', args=[page_number + 1])
+
+            if (page_number == 2):
+                context['prev_url'] = reverse('blog_index', args=[])
+
+            elif (page_number > 2):
+                context['prev_url'] = reverse('blog_index', args=[page_number - 1])
+
         return result
 
 
@@ -66,6 +77,7 @@ class FeedBaseCtrl(BlogBaseCtrl):
             context['cursor'] = cursor
             context['more'] = more
             context['cur_page'] = page_number
+
         return result
 
 
@@ -94,7 +106,7 @@ class RssCtrl(FeedBaseCtrl):
 
 
 class BlogCategoryCtrl(BlogBaseCtrl):
-    view_name = 'artwork_index'
+    view_name = 'blog_category_index'
     template = 'plugins/blog/index.html'
     content_title = 'Browse'
 
@@ -119,6 +131,16 @@ class BlogCategoryCtrl(BlogBaseCtrl):
             context['cursor'] = cursor
             context['more'] = more
             context['cur_page'] = page_number
+            
+            if more:
+                context['more_url'] = reverse('blog_category_index', args=[category_slug, page_number + 1])
+
+            if (page_number == 2):
+                context['prev_url'] = reverse('blog_category_index', args=[category_slug])
+
+            elif (page_number > 2):
+                context['prev_url'] = reverse('blog_category_index', args=[category_slug, page_number - 1])
+            
         return result
 
 
@@ -167,5 +189,6 @@ class BlogPermalinkCtrl(BlogBaseCtrl):
                 return HttpResponsePermanentRedirect(post.get_permalink())
 
             self.content_title = post.title
+            setattr(post, 'category_entities', ndb.get_multi(post.categories))
             context['post'] = post
         return result

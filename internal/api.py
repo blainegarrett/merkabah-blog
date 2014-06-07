@@ -62,10 +62,27 @@ def _get_posts_helper(q, cursor_index_key, page_number=1, limit=POSTS_PER_PAGE):
     # Run the query
     posts, cursor, more = q.fetch_page(limit, start_cursor=cursor)
 
-    # Finally, bulk dereference the primary image
+    # Bulk Dereference Categories
+    c_map = {}
+    for p in posts:
+        setattr(p, 'category_entities', [])
 
+        if p.categories:
+            for c in p.categories:
+                if not c_map.get(c, None):
+                    c_map[c] = []
+                c_map[c].append(p)
+    categories = ndb.get_multi(c_map.keys())
+    for category in categories:
+        p_list = c_map.get(category.key, None)
+        if p_list and category:
+            for p in p_list:
+                p.category_entities.append(category)
+
+    # Finally, bulk dereference the primary image
     p_map = {}
     for p in posts:
+        setattr(p, 'get_primary_media_image', None)
         if p.primary_media_image:
             if not p_map.get(p.primary_media_image, None):
                 p_map[p.primary_media_image] = []
@@ -76,9 +93,10 @@ def _get_posts_helper(q, cursor_index_key, page_number=1, limit=POSTS_PER_PAGE):
         p_list = p_map.get(image.key, None)
         if p_list and image:
             for p in p_list:
-                setattr(p, 'get_primary_media_image', image)
+                p.get_primary_media_image = image
 
     return posts, cursor, more
+
 
 def published_posts_by_category(category_key, page_number=1, limit=POSTS_PER_PAGE):
     """
@@ -88,6 +106,7 @@ def published_posts_by_category(category_key, page_number=1, limit=POSTS_PER_PAG
     # Note, this needs to be on a single line
     q = BlogPost.query().filter(BlogPost.published_date > PUBLISHED_DATE_MIN).filter(BlogPost.categories == category_key).order(-BlogPost.published_date)
     return _get_posts_helper(q, 'cursor_index_%s' % category_key.id(), page_number, limit)
+
 
 def get_published_posts(page_number=1, limit=POSTS_PER_PAGE):
     """
