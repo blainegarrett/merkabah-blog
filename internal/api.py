@@ -39,15 +39,8 @@ def get_posts(cursor=None, limit=POSTS_PER_PAGE):
     return entities, next_cursor, more
 
 
-def get_published_posts(page_number=1, limit=POSTS_PER_PAGE):
-    """
-    Return a list of posts
-    """
-
+def _get_posts_helper(q, cursor_index_key, page_number=1, limit=POSTS_PER_PAGE):
     # Note, this needs to be on a single line
-    q = BlogPost.query().filter(BlogPost.published_date > PUBLISHED_DATE_MIN).order(-BlogPost.published_date)
-    # Check if cursor index is in memcache
-    cursor_index_key = 'cursor_index' # TODO: Build this from the query
     cursor_index = memcache.get(cursor_index_key)
 
     if not cursor_index:
@@ -86,6 +79,24 @@ def get_published_posts(page_number=1, limit=POSTS_PER_PAGE):
                 setattr(p, 'get_primary_media_image', image)
 
     return posts, cursor, more
+
+def published_posts_by_category(category_key, page_number=1, limit=POSTS_PER_PAGE):
+    """
+    Fetch published posts of a given category
+    """
+
+    # Note, this needs to be on a single line
+    q = BlogPost.query().filter(BlogPost.published_date > PUBLISHED_DATE_MIN).filter(BlogPost.categories == category_key).order(-BlogPost.published_date)
+    return _get_posts_helper(q, 'cursor_index_%s' % category_key.id(), page_number, limit)
+
+def get_published_posts(page_number=1, limit=POSTS_PER_PAGE):
+    """
+    Fetch all published posts
+    """
+
+    # Note, this needs to be on a single line
+    q = BlogPost.query().filter(BlogPost.published_date > PUBLISHED_DATE_MIN).order(-BlogPost.published_date)
+    return _get_posts_helper(q, 'cursor_index', page_number, limit)
 
 
 def create_post(user, cleaned_data):
@@ -227,3 +238,16 @@ def get_categories():
     # TODO: Paginate this, etc
     entities = BlogCategory.query().fetch(1000)
     return entities
+
+#####################
+# Categories
+#####################
+def get_category_by_slug(category_slug):
+    """
+    Fetch a category entity given a category_slug
+    """
+
+    if not category_slug:
+        return None
+    cat = BlogCategory.query(BlogCategory.slug == category_slug).get()
+    return cat
