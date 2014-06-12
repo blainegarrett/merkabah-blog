@@ -80,7 +80,7 @@ def truncate_html_words(s, num, end_text='...'):
             break
         pos = m.end(0)
         
-        if m.group(0) == '<!--more-->':
+        if m.group(0) in ['<!--more-->', '<!-- more -->']:
             end_text_pos = prev_pos
             word_not_found = False
             break
@@ -133,10 +133,11 @@ def render_excerpt(post):
     VALID_TAGS = ['p']
 
     content = post.content
-    
-    has_more = '<!-- more -->'
-    
+
     has_more = content.find('<!-- more -->')
+    if has_more == -1:
+        has_more = content.find('<!--more-->') # Might be Wordpress style
+
     if has_more > -1:
         content = content[:has_more]
 
