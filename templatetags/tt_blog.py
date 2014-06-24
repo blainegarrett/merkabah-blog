@@ -3,6 +3,7 @@ from django.utils.safestring import mark_safe
 from django.utils.encoding import force_unicode
 from django.utils.html import conditional_escape
 from django.template.loader import render_to_string
+from django.core.urlresolvers import reverse
 import logging
 import re
 
@@ -10,6 +11,19 @@ from ..internal import api as blog_api
 
 register = Library()
 
+@register.simple_tag
+def list_categories(post):
+    if not hasattr(post, 'category_entities'):
+        return ''
+
+    categories = post.category_entities
+    
+    cat_strs = []
+    for cat in categories:
+        cat_strs.append('<a href="%s">%s</a>' % (reverse('blog_category_index', args=[cat.slug]), cat.name))
+    
+    return ', '.join(cat_strs)
+    
 
 @register.simple_tag
 def newest_blog_posts():
@@ -19,16 +33,17 @@ def newest_blog_posts():
     output = '<div class="posts">\
         <div class="headline"><h2>Recent Blog Entries</h2></div>'
     for post in posts[:2]:
-        image_filename = ''
+        image_html = ''
         if post.primary_media_image:
             image_filename = post.primary_media_image.get().gcs_filename
+            image_html = '<a href="%s"><img src="http://commondatastorage.googleapis.com/blaine-garrett/%s" alt="%s" /></a>' % (post.get_permalink(), image_filename, post.title)
 
         output += '<dl class="dl-horizontal">\
-            <dt><a href="%s"><img src="http://commondatastorage.googleapis.com/blaine-garrett/%s" alt="%s" /></a></dt>\
+            <dt>%s</dt>\
             <dd>\
                 <p><a href="%s" title="%s">%s</a></p> \
             </dd>\
-        </dl>' % (post.get_permalink(), image_filename, post.title, post.get_permalink(), post.title, post.title)
+        </dl>' % (image_html, post.get_permalink(), post.title, post.title)
 
     output += '</div>'
     
@@ -65,7 +80,7 @@ def truncate_html_words(s, num, end_text='...'):
             break
         pos = m.end(0)
         
-        if m.group(0) == '<!--more-->':
+        if m.group(0) in ['<!--more-->', '<!-- more -->']:
             end_text_pos = prev_pos
             word_not_found = False
             break
@@ -118,10 +133,11 @@ def render_excerpt(post):
     VALID_TAGS = ['p']
 
     content = post.content
-    
-    has_more = '<!-- more -->'
-    
+
     has_more = content.find('<!-- more -->')
+    if has_more == -1:
+        has_more = content.find('<!--more-->') # Might be Wordpress style
+
     if has_more > -1:
         content = content[:has_more]
 
@@ -166,12 +182,13 @@ def render_content(content):
 
     def slider_short_code_proc(m):
         slide_html = ''
-        
-        import logging
 
-        
         if m.group(2):
             code = m.group(2).replace('<br />','')
+            
+            import logging
+            logging.error(code)
+
             slide_defs = code.split('\n')
             for slide_def in slide_defs:
                 bits = slide_def.split('|')
@@ -202,7 +219,7 @@ def render_content(content):
     content = re.sub(r"(\[caption)([^\]]*)(])(.*)(\[/caption\])", wp_caption_shortcode_proc, content)
     content = re.sub(r'(\[source((code)*? lang(uage)*?)*?=([\'"]*?)(python)([\'"]*?)])(.*?)(\[/source(code)*?\])', wp_code_shortcode_proc, content, flags=re.MULTILINE|re.DOTALL)
 
-    content = re.sub(r'(\[slider\])(.*?)(\[/slider\])', slider_short_code_proc, content, flags=re.MULTILINE|re.DOTALL)
+    #content = re.sub(r'(\[slider\])(.*?)(\[/slider\])', slider_short_code_proc, content, flags=re.MULTILINE|re.DOTALL)
     
     content = re.sub(r"(\[caption)([^\]]*)(])(.*)(\[/caption\])", wp_caption_shortcode_proc, content)
     content = re.sub(r"(\[youtube:)([^\]]*)(])", wp_youtube_shortcode_proc, content)
