@@ -215,10 +215,30 @@ def render_content(content):
         #return '<div' + attrs + '>' + m.group(4) + '<div class="caption"><h4>Brad Majors, CEO</h4><p>Etiam fermentum convallis ullamcorper. Curabitur vel vestibulum leo.</p></div></div>'
         return '<div' + attrs + '>' + m.group(4) + '</div>'
 
+    def wp_gallery_shortcode_proc(m):
+        """
+        This only works if the photo plugin is installed and currently only works at the default
+        plugin name. This should be reworked so it can be customized per install
+        """
+        from plugins.photo.internal.api import photo as photo_api
+        attrs = m.group(2)
+
+        photo_ids_str = re.sub(r"(photos=)(&quot;)(.+)(&quot;)", "\\3", attrs)
+        photo_ids = [int(photo_id) for photo_id in photo_ids_str.split(',')]
+
+        output = '<section class="row portfolio filtrable clearfix">'
+        photos = photo_api.get_photos_by_ids(photo_ids)
+        for photo in photos:
+            output += '<article data-id="id-%s" data-type="javascript html" class="span2"><div class="block-grey"><div class="block-light"><span class="portfolio-img"><span class="hover-span"><a href="%s" class="p-view" data-rel="prettyPhoto" rel="prettyPhoto"></a></span><img src="%s" alt="photo"></span></div></div></article>' % (photo.key.id(), photo.get_sized_url(), photo.get_thumbnail_url())
+
+        output += '</section>'
+        return output
+        
+
     # WP Caption shortcode
     content = re.sub(r"(\[caption)([^\]]*)(])(.*)(\[/caption\])", wp_caption_shortcode_proc, content)
     content = re.sub(r'(\[source((code)*? lang(uage)*?)*?=([\'"]*?)(python)([\'"]*?)])(.*?)(\[/source(code)*?\])', wp_code_shortcode_proc, content, flags=re.MULTILINE|re.DOTALL)
-
+    content = re.sub(r"(\[gallery)([^\]]*)(.*)(])", wp_gallery_shortcode_proc, content)
     #content = re.sub(r'(\[slider\])(.*?)(\[/slider\])', slider_short_code_proc, content, flags=re.MULTILINE|re.DOTALL)
     
     content = re.sub(r"(\[caption)([^\]]*)(])(.*)(\[/caption\])", wp_caption_shortcode_proc, content)
