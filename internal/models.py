@@ -60,7 +60,7 @@ class BlogMedia(ndb.Model):
 
     @classmethod
     def _get_kind(cls):
-        return BLOGMEDIA_KIND  # This can be overriden in the plugin.config
+        return BLOGMEDIA_KIND # This can be overriden in the plugin.config
 
 
 class BlogCategory(ndb.Model):
@@ -89,7 +89,6 @@ class BlogPost(ndb.Model):
     nice_name = 'Posts'
 
     title = ndb.StringProperty()
-    summary = ndb.TextProperty()
     slug = ndb.StringProperty()
     content = ndb.TextProperty()
     published_date = ndb.DateTimeProperty()

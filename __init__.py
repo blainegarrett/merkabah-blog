@@ -19,7 +19,6 @@ from merkabah.core.controllers import FormResponse, FormErrorResponse, CloseForm
 from django.http import HttpResponseRedirect
 
 from settings import DEFAULT_GS_BUCKET_NAME
-from ubercache import cache_invalidate
 
 class BlogPlugin(object):
     """
@@ -34,12 +33,12 @@ class BlogPlugin(object):
     def process_index(self, request, context, *args, **kwargs):
         context['plugin'] = self
         return TemplateResponse('admin/plugin/dashboard.html', context)
-
+        
     def process_posts(self, request, context, *args, **kwargs):
         """
         Driver switchboard logic
         """
-
+        
         entities, cursor, more = get_posts(limit=1000)
         context['grid'] = BlogPostGrid(entities, request, context)
 
@@ -56,8 +55,7 @@ class BlogPlugin(object):
             if form.is_valid():
 
                 p = create_post(context['user'], form.cleaned_data)
-                cache_invalidate('written')
-
+    
                 # Serve up the new row
                 return HttpResponseRedirect(urlresolvers.reverse('admin_plugin_action', args=(context['plugin_slug'], 'posts')))
 
@@ -79,7 +77,6 @@ class BlogPlugin(object):
 
         initial_data = {
             'slug': post.slug,
-            'summary': post.summary,
             'title': post.title,
             'content': post.content,
             'publish': bool(post.published_date),
@@ -94,7 +91,6 @@ class BlogPlugin(object):
             if form.is_valid():
 
                 p = edit_post(context['user'], post, form.cleaned_data)
-                cache_invalidate('written')
 
                 # Serve up the new row
                 return HttpResponseRedirect(urlresolvers.reverse('admin_plugin_action', args=(context['plugin_slug'], 'posts')))
@@ -119,7 +115,6 @@ class BlogPlugin(object):
 
         # Delete the entity that refers to the gcs file
         post_key.delete()
-        cache_invalidate('written')
         return HttpResponseRedirect(urlresolvers.reverse('admin_plugin_action', args=(context['plugin_slug'], 'posts')))
 
 
@@ -132,10 +127,10 @@ class BlogPlugin(object):
         fs = Cloudstorage(DEFAULT_GS_BUCKET_NAME)
 
         form = ImageUploadForm()
-
+        
         context['form'] = form
         has_files = fs.get_uploads(request, 'the_file', True)
-
+        
 
         if has_files:
             file_info = has_files[0]
@@ -150,17 +145,17 @@ class BlogPlugin(object):
             #logging.warning(data)
 
             # What we want to do now is create a copy of the file with our own info
-
+            
             dest_filename = 'juniper/%s' % original_filename
 
             new_gcs_filename = fs.write(dest_filename, data, content_type)
             logging.warning(new_gcs_filename)
-
+            
             # Finally delete the tmp file
             data =  fs.delete(gs_object_name.replace('/gs', ''))
 
             media_key = BlogMedia(content_type=content_type, size=size, filename=dest_filename, gcs_filename = dest_filename).put()
-
+            
             #http://192.168.1.102:8080/_ah/gcs/dim-media/juniper/993782_10151441159702751_1645270937_n.jpg
             #http://<host>/_ah/gcs/dim-media/juniper/993782_10151441159702751_1645270937_n.jpg
             #/dim-media/juniper/993782_10151441159702751_1645270937_n.jpg
@@ -171,7 +166,7 @@ class BlogPlugin(object):
 
 
         upload_url = fs.create_upload_url('/madmin/plugin/blog/images_create/')
-
+        
         return FormResponse(form, id='images_create_form', title="Upload a file", target_url=upload_url, target_action='images_create', is_upload=True)
 
     def process_categories(self, request, context, *args, **kwargs):
@@ -182,7 +177,7 @@ class BlogPlugin(object):
 
     def process_create_category(self, request, context, *args, **kwargs):
         form = BlogCategoryForm()
-
+        
         context['form'] = form
 
         if request.POST:
@@ -219,9 +214,9 @@ class BlogPlugin(object):
         return AlertResponse('Deleted...')
 
     def process_images(self, request, context, *args, **kwargs):
-
+        
         from merkabah.core.files.api.cloudstorage import Cloudstorage
-
+        
         # Get the file upload url
         fs = Cloudstorage(settings.DEFAULT_GS_BUCKET_NAME)
         context['upload_url'] = fs.create_upload_url('/upload_endpoint/')
@@ -237,15 +232,15 @@ class BlogPlugin(object):
         from merkabah.core.files.api.cloudstorage import Cloudstorage
 
         media_keystr = request.REQUEST['media_key']
-
+        
         if not media_keystr:
             raise RuntimeError('No argument media_key provided.')
-
+        
         media_key = ndb.Key(urlsafe=media_keystr)
-
+        
         # Prep the file on cloud storage to be deleted
         media = media_key.get()
-
+        
         if not (media or media.gcs_filename):
             logging.debug('Media with key %s did not have a gs_filename.' % media_keystr)
         else:
@@ -259,10 +254,10 @@ class BlogPlugin(object):
         return HttpResponseRedirect(urlresolvers.reverse('admin_plugin_action', args=(context['plugin_slug'], 'images')))
 
     def process_select_image(self, request, context, *args, **kwargs):
-
+        
         entities = get_images()
         context['grid'] = BlogMediaGrid(entities, request, context)
-
+        
 
 # Register Plugin
 pluginClass = BlogPlugin
