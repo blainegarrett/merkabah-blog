@@ -136,7 +136,8 @@ def create_post(user, cleaned_data):
         content=cleaned_data['content'],
         slug=cleaned_data['slug'],
         categories=category_keys,
-        creator=user.key,
+        #creator=user.key,
+        summary=cleaned_data['summary'],
         published_date=published_date)
 
     if cleaned_data['primary_media_image']:
@@ -154,6 +155,7 @@ def edit_post(user, post, cleaned_data):
     post.is_published = cleaned_data['publish']
     post.content = cleaned_data['content']
     post.title = cleaned_data['title']
+    post.summary = cleaned_data['summary']
 
     if (not post.published_date) and cleaned_data['publish']:
         # Set the published date - note this is never unset if it is unchecked
